@@ -2,8 +2,8 @@ name: Build and publish wheels
 
 on:
   release:
-    types: [published]
-  workflow_dispatch:
+    types: [published]     # real release  -> publishes to PyPI
+  workflow_dispatch:       # manual run     -> publishes to TestPyPI (dry run)
 
 jobs:
   build_wheels:
@@ -17,7 +17,6 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21
         env:
-          # Py 3.7-3.12, skip 32-bit and musllinux to keep it simple
           CIBW_BUILD: "cp37-* cp38-* cp39-* cp310-* cp311-* cp312-*"
           CIBW_SKIP: "*-win32 *-manylinux_i686 *musllinux*"
           CIBW_BEFORE_BUILD: "pip install numpy"
@@ -36,12 +35,32 @@ jobs:
           name: sdist
           path: dist/*.tar.gz
 
-  publish:
+  # Manual "Run workflow" -> TestPyPI dress rehearsal
+  publish_testpypi:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    environment: testpypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+  # Real GitHub Release -> PyPI
+  publish_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
     environment: pypi
     permissions:
-      id-token: write   # PyPI trusted publishing, no API token needed
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
