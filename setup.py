@@ -23,7 +23,7 @@ setup(
     long_description_content_type='text/markdown',  # Ensure PyPI renders it correctly
     author='Nikhil Chaurasia Sandeep Sangal, Shikhar Krishn Jha',
     author_email='nikolspace@gmail.com',
-    url='https://github.com/YOUR_GITHUB_USERNAME/polySim',  # URL to your package's repository
+    url='https://github.com/nikolspace/polySim',  # URL to your package's repository
     packages=['polySim'],
     ext_modules=[c_module],
     install_requires=['numpy'],
